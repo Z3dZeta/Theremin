@@ -1,29 +1,56 @@
-//D7 = Echo pin > PD7 > Input
-//D8 = Trig pin > PB0 > Output
 
-DDRC &= ~(1 << PD7);  //Echo pin als Input
-PORTC |= (1 << PD7);  //Echo pin pull-up High
+int main(void) {
 
-DDRC |= (1 << PB0);  //Trig pin als output
+  DDRD &= ~(1 << PD7);  // Echo pin as Input
+  PORTD |= (1 << PD7);  // Echo pin pull-up High
 
-typedef enum {
-  trig_on,
-  trig_off,
-  echo_on,
-}
+  DDRB |= (1 << PB0);  // Trig pin as output
 
-State currentState = trig_off;
+  uint16_t pingTimeStart = 0;
+  uint16_t pingTimeEnd = 0;
 
-while (1) {
+  typedef enum {
+    trig_on,
+    trig_off,
+    echo
+  } State;
 
-  switch (currentState){
-    case trig_on:
-      PINB |= (1 << PB6);
-      currentState = trig_off;
+  State currentState = trig_off;
+
+  while (1) {
+
+/*
+--- TO DO ---
+Add timer1 for measuring time between trig and echo
+Add logic for measuring distance
+Probably more shit I can't think off
+*/
+    // Switch cases for the ping sensor
+    switch (currentState) {
+      case trig_on:
+        PORTB |= (1 << PB1);  // trigger high
+        currentState = trig_off;
+        pingTimeStart = 0; //Placeholders for the timers
+        break;
+
+      case trig_off:
+        if ((PINB & (1 << PB1)) != 0) {  // check input
+          PORTB & ~(1 << PB1);           // Trigger off
+          currentState = echo;        
+          break;
+        }
+
+
+        printf("%u\n", pingTimeEnd - pingTimeStart); //check statement REMOVE
+        break;
+
+      case echo:
+        if ((PINB & (1 << PB0))) {
+          pingTimeEnd = 0;
+        }
+        break;
+    }
   }
 
-    case trig_off:
-      if ((1 << PB5) == 1){
-        currentState = echo_off;
-      }
+  return 0;
 }
