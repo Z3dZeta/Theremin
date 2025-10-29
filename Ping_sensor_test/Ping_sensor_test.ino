@@ -6,8 +6,16 @@ int main(void) {
 
   DDRB |= (1 << PB0);  // Trig pin as output
 
-  uint16_t pingTimeStart = 0;
-  uint16_t pingTimeEnd = 0;
+  //Set up timer on default mode
+  TCCR1A = 0;
+  TCCR1B = (1 << WGM12) | (1 << CS11) | (1 << CS10);
+  OCR1A = 39999;  // Compare value
+
+  TCCR1B |= (1 << CS11);   //Prescaler on 8
+  TIMSK1 |= (1 << TOIE1);  //Enable overflow interrupt
+
+  uint16_t pingTimeStart;
+  uint16_t pingTimeEnd;
 
   typedef enum {
     trig_on,
@@ -17,36 +25,42 @@ int main(void) {
 
   State currentState = trig_off;
 
-  while (1) {
+  sei();
 
-/*
+  /*
 --- TO DO ---
-Add timer1 for measuring time between trig and echo
 Add logic for measuring distance
+
+How to make it so the ping sensor gets controlled by the timer1 > probably not with switch cases
+  > Should be using interrupts, interrupt needs to trigger the trig pin
+
 Probably more shit I can't think off
 */
+
+  while (1) {
     // Switch cases for the ping sensor
     switch (currentState) {
       case trig_on:
         PORTB |= (1 << PB1);  // trigger high
         currentState = trig_off;
-        pingTimeStart = 0; //Placeholders for the timers
+        pingTimeStart = TCNT1;
         break;
 
       case trig_off:
         if ((PINB & (1 << PB1)) != 0) {  // check input
           PORTB & ~(1 << PB1);           // Trigger off
-          currentState = echo;        
+          currentState = echo;
+          pingTimeEnd = TCNT1;
           break;
         }
 
+        printf("%u\n", pingTimeEnd - pingTimeStart);  //check statement REMOVE
 
-        printf("%u\n", pingTimeEnd - pingTimeStart); //check statement REMOVE
         break;
 
       case echo:
         if ((PINB & (1 << PB0))) {
-          pingTimeEnd = 0;
+        
         }
         break;
     }
