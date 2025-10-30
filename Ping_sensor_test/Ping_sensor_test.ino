@@ -33,8 +33,9 @@ Add logic for measuring distance
 
 How to make it so the ping sensor gets controlled by the timer1 > probably not with switch cases
   > Should be using interrupts, interrupt needs to trigger the trig pin
+  > So then delete switch cases? (probably)
+  > But how would I then get a measurement?
 
-Probably more shit I can't think off
 */
 
   while (1) {
@@ -47,8 +48,7 @@ Probably more shit I can't think off
         break;
 
       case trig_off:
-        if ((PINB & (1 << PB1)) != 0) {  // check input
-          PORTB & ~(1 << PB1);           // Trigger off
+        if ((PINB & (1 << PB1)) != 0) {  // check input          // Trigger off
           currentState = echo;
           pingTimeEnd = TCNT1;
           break;
